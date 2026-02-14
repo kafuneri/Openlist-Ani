@@ -1,0 +1,159 @@
+"""
+Assistant tools module.
+
+Provides tool classes for assistant function calling.
+"""
+
+from typing import Dict, List, Optional, Type
+
+from ...core.download import DownloadManager
+from ...logger import logger
+from .base import BaseTool
+from .db_tool import ExecuteSqlTool
+from .download_tool import DownloadResourceTool
+from .parse_rss import ParseRssTool
+from .search_anime import SearchAnimeTool
+
+# Registry of all available tools
+_TOOL_CLASSES: List[Type[BaseTool]] = [
+    SearchAnimeTool,
+    ParseRssTool,
+    DownloadResourceTool,
+    ExecuteSqlTool,
+]
+
+
+class ToolRegistry:
+    """Registry for managing assistant tools."""
+
+    def __init__(self, download_manager: Optional[DownloadManager] = None):
+        """Initialize tool registry.
+
+        Args:
+            download_manager: DownloadManager instance for download tool
+        """
+        self._tools: Dict[str, BaseTool] = {}
+        self._download_manager = download_manager
+        self._init_tools()
+
+    def _init_tools(self):
+        """Initialize all tool instances."""
+        for tool_cls in _TOOL_CLASSES:
+            if tool_cls == DownloadResourceTool:
+                tool = tool_cls(self._download_manager)
+            else:
+                tool = tool_cls()
+            self._tools[tool.name] = tool
+
+    def set_download_manager(self, download_manager: DownloadManager):
+        """Set download manager for download tool.
+
+        Args:
+            download_manager: DownloadManager instance
+        """
+        self._download_manager = download_manager
+        if "download_resource" in self._tools:
+            download_tool = self._tools["download_resource"]
+            if isinstance(download_tool, DownloadResourceTool):
+                download_tool.download_manager = download_manager
+
+    def get_tool(self, name: str) -> Optional[BaseTool]:
+        """Get tool by name.
+
+        Args:
+            name: Tool name
+
+        Returns:
+            Tool instance or None
+        """
+        return self._tools.get(name)
+
+    def get_definitions(self) -> List[dict]:
+        """Get all tool definitions for OpenAI function calling.
+
+        Returns:
+            List of tool definition dictionaries
+        """
+        return [tool.get_definition() for tool in self._tools.values()]
+
+    async def handle_tool_call(self, tool_name: str, arguments: dict) -> str:
+        """Handle tool call from assistant.
+
+        Args:
+            tool_name: Name of the tool to call
+            arguments: Tool arguments
+
+        Returns:
+            Tool execution result as string
+        """
+        tool = self.get_tool(tool_name)
+        if not tool:
+            return f"❌ Unknown tool: {tool_name}"
+
+        try:
+            return await tool.execute(**arguments)
+        except Exception as e:
+            logger.exception(f"Assistant: Error handling tool call {tool_name}")
+            return f"❌ Tool execution error: {str(e)}"
+
+
+# Convenience functions for backward compatibility
+_default_registry: Optional[ToolRegistry] = None
+
+
+def get_registry(
+    download_manager: Optional[DownloadManager] = None,
+) -> ToolRegistry:
+    """Get or create the default tool registry.
+
+    Args:
+        download_manager: DownloadManager instance
+
+    Returns:
+        ToolRegistry instance
+    """
+    global _default_registry
+    if _default_registry is None:
+        _default_registry = ToolRegistry(download_manager)
+    elif download_manager is not None:
+        _default_registry.set_download_manager(download_manager)
+    return _default_registry
+
+
+def get_assistant_tools() -> List[dict]:
+    """Get tool definitions for OpenAI function calling.
+
+    Returns:
+        List of tool definition dictionaries
+    """
+    return get_registry().get_definitions()
+
+
+async def handle_tool_call(
+    tool_name: str, arguments: dict, download_manager: DownloadManager
+) -> str:
+    """Handle tool call from assistant.
+
+    Args:
+        tool_name: Name of the tool to call
+        arguments: Tool arguments
+        download_manager: DownloadManager instance
+
+    Returns:
+        Tool execution result as string
+    """
+    registry = get_registry(download_manager)
+    return await registry.handle_tool_call(tool_name, arguments)
+
+
+__all__ = [
+    "BaseTool",
+    "SearchAnimeTool",
+    "ParseRssTool",
+    "DownloadResourceTool",
+    "ExecuteSqlTool",
+    "ToolRegistry",
+    "get_registry",
+    "get_assistant_tools",
+    "handle_tool_call",
+]

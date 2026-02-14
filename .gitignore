@@ -1,20 +1,21 @@
-# python generated files
+# Python-generated files
 __pycache__/
 *.py[oc]
 build/
 dist/
 wheels/
 *.egg-info
-.coverage
-.vscode/
 
-# venv
+# Virtual environments
 .venv
 
-# userdata
+# data
+logs/
 data/
-log/
-*.yaml
 
-# debug file
+# config
+*.toml
+!pyproject.toml
+
+# test
 *.ipynb

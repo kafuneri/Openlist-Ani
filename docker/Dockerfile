@@ -1,10 +1,10 @@
-FROM ghcr.io/astral-sh/uv:python3.12-alpine
+FROM ghcr.io/astral-sh/uv:python3.11-alpine
 
 COPY src/ /src
 COPY pyproject.toml /pyproject.toml
 COPY uv.lock /uv.lock
 COPY README.md /README.md
-
+COPY docker/entrypoint.sh /entrypoint.sh
 
 WORKDIR /
 
@@ -15,9 +15,10 @@ RUN apk add --no-cache gcc musl-dev linux-headers rust cargo && \
     rm -rf \
         /var/cache/apk/* \
         /root/.cache \
-        /tmp/*
+        /tmp/* && \
+    chmod +x /entrypoint.sh
 
+ENV CONFIG_PATH /config.toml
+ENV ENABLE_ASSISTANT false
 
-ENV CONFIG_PATH /config.yaml
-
-CMD ["/bin/sh", "-c", "uv run alist-mikananirss --config $CONFIG_PATH"]
+CMD ["/entrypoint.sh"]

@@ -1,46 +1,38 @@
 [project]
-name = "alist-mikananirss"
-version = "0.5.5"
-description = "Automatically fetch anime updates from the Mikan Project's RSS feed and offline download them to the cloud drive through Alist."
+name = "openlist-ani"
+version = "1.0.0"
+description = "Add your description here"
 readme = "README.md"
+authors = [{ name = "TwoSix", email = "nitiaob@qq.com" }]
 requires-python = ">=3.11"
 dependencies = [
-    "aiohttp>=3.11",
-    "aiosqlite>=0.20.0",
-    "async-lru>=2.0.4",
-    "asyncio>=3.4.3",
-    "beautifulsoup4>=4.12.3",
-    "feedparser>=6.0.11",
-    "google-genai>=1.10.0",
+    "aiohttp>=3.13.3",
+    "aiosqlite>=0.22.1",
+    "beautifulsoup4>=4.14.3",
+    "feedparser>=6.0.12",
     "loguru>=0.7.3",
-    "openai>=1.58.1",
-    "python-telegram-bot>=21.9",
-    "pyyaml>=6.0.2",
-    "tenacity>=9.0.0",
+    "lxml>=6.0.2",
+    "openai>=2.15.0",
+    "pydantic>=2.12.5",
+    "tomlkit>=0.13.3",
 ]
 
 [project.scripts]
-alist-mikananirss = "alist_mikananirss:main"
+openlist-ani = "openlist_ani:main"
+openlist-ani-assistant = "openlist_ani.assistant_main:main"
+migrate-db = "openlist_ani.scripts.migrate_db:migrate"
 
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
-build-backend = "hatchling.build"
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/alist_mikananirss"]
+requires = ["uv_build>=0.9.5,<0.10.0"]
+build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
-    "pytest-asyncio>=0.25.1",
-    "pytest>=8.3.4",
-    "aioresponses>=0.7.7",
-    "ipykernel>=6.29.5",
-    "ruff>=0.8.4",
-    "black>=24.10.0",
-    "requests>=2.32.3",
-    "coverage>=7.6.10",
-    "pytest-order>=1.3.0",
+    "black>=26.1.0",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.15.0",
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
