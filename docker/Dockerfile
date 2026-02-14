@@ -18,7 +18,7 @@ RUN apk add --no-cache gcc musl-dev linux-headers rust cargo && \
         /tmp/* && \
     chmod +x /entrypoint.sh
 
-ENV CONFIG_PATH /config.toml
-ENV ENABLE_ASSISTANT false
+ENV CONFIG_PATH=/config.toml
+ENV ENABLE_ASSISTANT=false
 
 CMD ["/entrypoint.sh"]
